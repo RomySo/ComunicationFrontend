@@ -56,3 +56,26 @@ export async function logoutUser(token) {
     }
     return res.json();
 }
+
+// Forgot password
+export async function sendForgotPasswordCode(email) {
+    const res = await fetch(`${API_URL}/forgot-password`, {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({email}),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || "Failed to send code");
+    return data;
+}
+
+export async function verefyForgotPasswordCode(email,code) {
+    const res = await fetch(`${API_URL}/verify-code`, {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({email,code}),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || "Code verification failed");
+    return data;
+}
