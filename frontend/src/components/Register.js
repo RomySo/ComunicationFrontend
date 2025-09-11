@@ -1,5 +1,6 @@
 import React, {useState} from "react";
 import { useNavigate } from "react-router-dom";
+import { registerUser } from "../api/api";
 
 const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_\-+={};':"\\|,.<>/?]).{10,}$/;
 
@@ -12,6 +13,7 @@ function Register(){
         confirmPassword:"",
     });
     const [errors, setErrors] = useState({});
+    const [loading, setLoading] = useState(false);
 
     const handleChange = (e)=> {
         setFormData({...formData,[e.target.name]:e.target.value});
@@ -33,15 +35,28 @@ function Register(){
         }
         return newErrors;
     };
-    const handleSubmit = (e)=> {
+    const handleSubmit = async (e)=> {
         e.preventDefault();
         const validationErrors = validate();
         if (Object.keys(validationErrors).length > 0){
             setErrors(validationErrors);
-        }else {
-            setErrors({});
-            alert("Registration successeful");
+            return;
         }
+        setErrors({});
+        setLoading(true);
+        try{
+            await registerUser({
+                username:formData.username,
+                email:formData.email,
+                password:formData.passwordm
+            });
+            alert("Registration successful");
+            navigate("/login")
+        }catch(err){
+            setErrors({api:err.message});
+        }finally{
+            setLoading(false);
+        }    
     };
     
 
@@ -73,10 +88,11 @@ function Register(){
                 <input type="text" name="confirmPassword" placeholder="Confirm password" value={formData.confirmPassword} onChange={handleChange} style={{width:'100%', padding:'8px'}} />
                 {errors.confirmPassword && (<p style={{color: "red", fontSize: "12px"}}>{errors.confirmPassword}</p>)}
                </div>
-               <button type="submit" style={{width:'100%', padding:'10px', backgroundColor:'#3498db', color:'#fff', border:'none', borderRadius:'5px'}}  >
-                Register
+               {errors.api && (<p style={{color: "red", fontSize: "12px"}}>{errors.api}</p>)}
+               <button type="submit" disabled={loading} style={{width:'100%', padding:'10px', backgroundColor:'#3498db', color:'#fff', border:'none', borderRadius:'5px'}}  >
+                {loading ? "Registering..." : "Register"}
                </button>
-               <button type="button" onClick={()=> navigate("/Login")} style={{width:'100%', padding:'10px',
+               <button type="button" onClick={()=> navigate("/")} style={{width:'100%', padding:'10px',
                  backgroundColor:'#3498db', color:'#fff', border:'none', borderRadius:'5px',marginTop:'5px'}}  >
                 Back to Login
                </button>

@@ -1,43 +1,44 @@
 import {useState} from "react";
 import {useNavigate} from "react-router-dom";
+import { sendForgotPasswordCode,verefyForgotPasswordCode } from "../api/api";
 
 
 function ForgotPassword(){
     const [email,setEmail] = useState("");
     const [codeSent,setCodeSent] = useState(false);
     const [code,setCode] = useState("");
+    const [error, setError] = useState("");
     const navigate = useNavigate();
 
     //send code to the server
     const handleSendCode = async (e) => {
         e.preventDefault();
-        const response = await fetch("http://localhost:5000/api/forgot-password",{
-            method: "POST",
-            headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({email}),
-        });
-        const data = await response.json();
-        alert(data.message);
-        if(response.ok){
+        setError("");
+        try{
+            const data = await sendForgotPasswordCode(email);
+            alert(data.message);
             setCodeSent(true);
+        }catch(err){
+            setError(err.message);
         }
     };
     //verify the code that the user get
     const handleVerifyCode = async () => { 
-        const response = await fetch("http://localhost:5000/api/verify-code",{
-            method: "POST",
-            headers: {"Content-Type":"application/json"},
-            body: JSON.stringify({email,code}),
-        });
-        const data = await response.json();
-        alert(response.message);
-        if(data.success){
-            navigate("/changepassword",{state:{email}}); 
+        setError("");
+        try{
+            const data = await verefyForgotPasswordCode(email,code);
+            alert(data.message);
+            if (data.success){
+                navigate("/changepassword", {state:{email}});
+            }
+        }catch(err){
+            setError(err.message);
         }
     };
     return(
-        <div>
+        <div style={{ maxWidth: "400px", margin: "50px auto", padding: "30px", border: "1px solid #ccc", borderRadius: "8px" }}>
             <h2>Forgot Password</h2>
+            {error && <p style={{ color: "red", fontSize: "12px" }}>{error}</p>}
             {/*mail send*/}
             {/*showing the place of sending code only if the code wasn't sent already*/}
             {!codeSent && (
@@ -47,8 +48,9 @@ function ForgotPassword(){
                       placeholder="Enter email address"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
+                      style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
                     />
-                    <button type="submit">Send code to email</button>  
+                    <button type="submit" style={{ width: "100%", padding: "10px" }}>Send code to email</button>  
                 </form>
             )}
             {/*code verification*/}
@@ -60,8 +62,9 @@ function ForgotPassword(){
                         placeholder="Enter code from email"
                         value={code}
                         onChange={(e) => setCode(e.target.value)}
+                        style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
                     />
-                    <button onClick={handleVerifyCode}>Verify Code</button>    
+                    <button onClick={handleVerifyCode} style={{ width: "100%", padding: "10px" }}>Verify Code</button>    
                 </div>
             )}
         </div>
